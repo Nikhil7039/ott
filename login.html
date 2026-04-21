@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTT Dashboard - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- Modern SaaS Dark Theme Variables --- */
+        :root {
+            --bg-body: #0f172a; 
+            --bg-container: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --bg-input: #0f172a;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --accent-blue: #3b82f6;
+        }
+
+        /* --- Base Styles & Global Animations --- */
+        @keyframes fadeInSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 100%);
+            color: var(--text-main);
+            margin: 0; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-container { 
+            width: 100%;
+            max-width: 420px; 
+            background: rgba(30, 41, 59, 0.7); 
+            backdrop-filter: blur(12px);
+            padding: 40px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px var(--shadow-color); 
+            animation: fadeInSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-sizing: border-box;
+        }
+
+        .login-header { text-align: center; margin-bottom: 35px; }
+
+        .login-title {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle { color: var(--text-muted); font-size: 15px; margin: 0; }
+
+        /* --- Form Styles --- */
+        .input-wrapper { display: flex; flex-direction: column; margin-bottom: 20px; }
+        .input-wrapper label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+        
+        input { 
+            padding: 14px 16px; background-color: var(--bg-input); color: var(--text-main);
+            border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;
+            width: 100%; box-sizing: border-box; transition: all 0.3s ease; font-family: inherit;
+        }
+        input:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+
+        button { 
+            font-family: inherit; border: none; cursor: pointer; font-weight: 600; 
+            border-radius: 10px; transition: all 0.2s ease; letter-spacing: 0.5px;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+        }
+        button:active { transform: scale(0.97); }
+
+        .submit-btn { 
+            background: var(--accent-blue); color: white; height: 50px; font-size: 15px; 
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); margin-top: 10px;
+        }
+        .submit-btn:hover { background: #2563eb; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-header">
+            <h1 class="login-title">System Access</h1>
+            <p class="login-subtitle">Sign in to manage client subscriptions</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="input-wrapper">
+                <label>Email Address</label>
+                <input type="email" id="adminEmail" placeholder="admin@example.com" required>
+            </div>
+            
+            <div class="input-wrapper">
+                <label>Password</label>
+                <input type="password" id="adminPassword" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="submit-btn">Sign In</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAK5nphCJF8KVWgNy1xpIhiCIUiGeJMlcU",
+            authDomain: "ott-a49dd.firebaseapp.com",
+            projectId: "ott-a49dd",
+            storageBucket: "ott-a49dd.firebasestorage.app",
+            messagingSenderId: "1084824993042",
+            appId: "1:1084824993042:web:ab5db4e49f7da3ab5f07cb",
+            measurementId: "G-20HKYBQV7D"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Redirect to dashboard if already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const btn = e.target.querySelector('.submit-btn');
+            
+            btn.innerText = 'Signing in...';
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    alert("Login failed: " + error.message);
+                    btn.innerText = 'Sign In';
+                });
+        });
+    </script>
+</body>
+</html>
