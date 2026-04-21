@@ -419,7 +419,7 @@
         };
 
         function generateModalHtml(dataArray, isToday) {
-            if (dataArray.length === 0) return '<p style="text-align:center; padding: 20px 0;">No subscriptions in this category.</p>';
+            if (dataArray.length === 0) return '<p style="text-align:center; padding: 20px 0;">No subscriptions expiring today.</p>';
             const grouped = {};
             dataArray.forEach(item => { if (!grouped[item.phone]) grouped[item.phone] = []; grouped[item.phone].push(item); });
             let html = '';
