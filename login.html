@@ -16,6 +16,7 @@
             --bg-input: #0f172a;
             --shadow-color: rgba(0, 0, 0, 0.5);
             --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
         }
 
         /* --- Base Styles & Global Animations --- */
@@ -35,33 +36,7 @@
             min-height: 100vh;
             padding: 20px;
             box-sizing: border-box;
-            position: relative; /* Added for absolute positioning of top-right button */
-        }
-
-        /* --- Super Admin Button (Top Right) --- */
-        .super-admin-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-
-        .super-admin-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            border-color: var(--accent-blue);
+            overflow-x: hidden;
         }
 
         .login-container { 
@@ -116,23 +91,88 @@
         }
         .submit-btn:hover { background: #2563eb; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
 
+        /* --- Animated Toast Notification --- */
+        .toast-notification {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: rgba(15, 23, 42, 0.95);
+            border-left: 4px solid var(--accent-red);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+            max-width: 90vw;
+        }
+
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toast-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
         /* --- Mobile Optimizations --- */
         @media (max-width: 480px) {
             .login-container { padding: 30px 20px; }
             .login-title { font-size: 24px; }
-            /* Adjust top-right button for mobile */
-            .super-admin-btn { top: 10px; right: 10px; padding: 6px 12px; font-size: 12px; }
+            .toast-notification {
+                top: 15px;
+                right: 15px;
+                left: 15px;
+                transform: translateY(-150%);
+            }
+            .toast-notification.show {
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 <body>
 
-    <a href="superadmin.html" class="super-admin-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-        Admin Login
-    </a>
+    <div id="errorToast" class="toast-notification">
+        <div class="toast-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <div class="toast-content">
+            <span class="toast-title">Authentication Failed</span>
+            <span id="toastMessage" class="toast-message">Invalid credentials provided.</span>
+        </div>
+    </div>
 
     <div class="login-container">
         <div class="login-header">
@@ -172,6 +212,22 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        // Toast Notification Logic
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('errorToast');
+            document.getElementById('toastMessage').innerText = message;
+            
+            // Clear any existing timeout so it doesn't hide early if triggered repeatedly
+            clearTimeout(toastTimeout);
+            
+            toast.classList.add('show');
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) { window.location.href = 'index.html'; }
         });
@@ -187,7 +243,8 @@
             signInWithEmailAndPassword(auth, email, password)
                 .then(() => { window.location.href = 'index.html'; })
                 .catch((error) => {
-                    alert("Login failed: " + error.message);
+                    // Replaced native alert() with custom toast
+                    showToast(error.message);
                     btn.innerText = 'Sign In';
                 });
         });
